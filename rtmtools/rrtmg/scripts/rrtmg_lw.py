@@ -1,6 +1,3 @@
-import rrtmgtools.lw.input as lwin
-import collections
-
 '''
 Script for specifiying inputs for RRTMG_LW and running it.
 
@@ -12,6 +9,11 @@ Input is divided into 3 main sections:
     2. Input for IN_CLD_RRTM 
     3. Input for IN_AER_RRTM
 ''' 
+
+
+
+
+
 
 
  
@@ -860,7 +862,9 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
 
 
 if __name__ == '__main__':
-
+      import rrtmgtools.lw.input as lwin
+      import collections
+      
       content = collections.deque([])
       content.append(lwin.record_1_1(CXID))
       content.append(lwin.record_1_2(IAER = IAER,
@@ -889,7 +893,7 @@ if __name__ == '__main__':
             content.append(lwin.record_2_2(IXMOLS = IXMOLS))
             content.append(lwin.record_2_2_1(XSNAME = XSNAME))
             content.append(lwin.record_2_2_2(IFRMX = IFRMX))
-            content.append(lwin.reacord_2_2_3to5(IXMOLS = IXMOLS,
+            content.append(lwin.record_2_2_3to5(IXMOLS = IXMOLS,
                                                  PATH_atmpro = PATH_atmpro))
 
       if IATM == 1:
@@ -940,7 +944,7 @@ if __name__ == '__main__':
                                                              PATH_atmpro = PATH_atmpro))
 
       with open('INPUT_RRTM', mode = 'w', encoding = 'utf-8') as file:
-            file.write(''.join(content))
+            file.write('\n'.join(content))
 
 
       
