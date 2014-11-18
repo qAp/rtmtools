@@ -44,7 +44,24 @@ def OUTPUT_RRTM_to_pandasPanel(readfrom = '', cooling_rate = False,
     dpanel.minor_axis = ['pressure', 'flux_up', 'flux_down', 'net_flux', rate_label]
     return dpanel
 
-        
-    
 
         
+def sum_OUTPUT_RRTM_over_wave_numbers(readfrom = './OUTPUT_RRTM',
+                                      V1 = 0, V2 = 3000):
+    '''
+    Sum the fluxes and cooling rates over wave number bands
+    between V1 and V2.  If V1 and V2 do not match any wave number band\'s
+    boundaries, they will be rounded to the closest boundaries.
+    '''
+    dpanel = OUTPUT_RRTM_to_pandasPanel(readfrom = readfrom,
+                                        cooling_rate = True,
+                                        signed_fluxes = True)
+    V1s, V2s = (lev.values for lev in dpanel.items.levels)
+    item1, item2 = (np.abs(vs - v).argmin() \
+                    for vs, v in zip([V1s, V2s], [V1, V2]))
+    flux_cor_tot = dpanel.ix[item1: item2, :, \
+                             ['flux_up', 'flux_down', \
+                              'net_flux', 'cooling_rate']].\
+                              sum(axis = 'items')
+    pressure = dpanel.ix[dpanel.items[0], :, 'pressure']
+    return pd.concat([pressure, flux_cor_tot], axis = 1)
