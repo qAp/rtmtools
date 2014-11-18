@@ -3,7 +3,7 @@ import collections
 import timeit
 import numpy as np
 import io
-import aerutils
+import rtmtools.lblrtm.aerutils as aerutils
 
 
 

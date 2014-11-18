@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 import collections
-import aerutils 
+import rtmtools.lblrtm.aerutils as aerutils
 import lblutils
 
 

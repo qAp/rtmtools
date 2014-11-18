@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import io
 
-import aerutils
-import plotting
-import create_LBLRTM_input as lblrtmin
+import rtmtools.lblrtm.aerutils as aerutils
+import rtmtools.lblrtm.plotting as plotting
+import rtmtools.lblrtm.create_LBLRTM_input as lblrtmin
 
 
 
