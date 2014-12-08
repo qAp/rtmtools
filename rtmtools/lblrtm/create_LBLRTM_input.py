@@ -298,6 +298,22 @@ def record_1_2(IHIRAC = '', ILBLF4 = '', ICNTNM = '', IAERSL = '',
                    for length, fmtspec, value in notes)
 
 
+def record_1_2_1(INFLAG = None, IOTFLG = None, JULDAT = None):
+    '''
+    INFLAG --- input flag for solar radiance calculation
+    IOTFLG --- output flag for solar radiance calculation
+    JULDAT --- JULDAT
+    '''
+    notes = ((5, '{:>5d}', INFLAG),
+             (5, '{:>5d}', IOTFLG),
+             (2, None, None),
+             (3, '{:>3d}', JULDAT))
+    return ''.join(length * ' ' if value == None\
+                   else fmtspec.format(value)\
+                   for length, fmtspec, value in notes)
+
+
+
 def record_1_3(V1 = '', V2 = '',
                SAMPLE = '', DVSET = '', ALFAL0 = '', AVMASS = '',
                DPTMIN = '', DPTFAC = '', ILNFLG = '', DVOUT = '',
@@ -555,6 +571,62 @@ def record_6_1(DIRCOS = ''):
                    for length, fmtspec, value in notes)    
 
 
+def record_12_2A(V1 = None, V2 = None, XSIZE = None, DELV = None, 
+                 NUMSBX = None, NOENDX = None, LFILE = None, LSKIPF = None,
+                 SCALE = None, IOPT = None, I4P = None, IXDEC = None):
+    '''
+    V1    --- initial wavenumber of the plot
+    V2    --- the final wavenumber of the plot
+    XSIZE --- number of inches of the X-axis
+    DELV  --- number of wavenumbers (cm-1) per major divison
+    '''
+    notes = ((10, '{:>10.4f}', V1),
+             (10, '{:>10.4f}', V2),
+             (10, '{:>10.4f}', XSIZE),
+             (10, '{:>10.4f}', DELV),
+             (5,  '{:>5d}', NUMSBX),
+             (5, '{:>5d}', NOENDX),
+             (5, '{:>5d}', LFILE),
+             (5, '{:>5d}', LSKIPF),
+             (5, '{:>10.3f}', SCALE),
+             (5, '{:>2d}', IOPT),
+             (5, '{:>3d}', I4P),
+             (5, '{:>5d}', IXDEC))
+    return ''.join(length * ' ' if value == None\
+                   else fmtspec.format(value)\
+                   for length, fmtspec, value in notes)    
+
+
+
+def record_12_3A(YMIN = None, YMAX = None, YSIZE = None, DELY = None,
+                 NUMSBY = None, NOENDY = None, IDEC = None,
+                 JEMIT = None, JPLOT = None, LOGPLT = None,
+                 JHDR = None, JOUT = None, JPLTFL = None):
+    '''
+    YMIN --- Y value at bottom of Y-axis
+    YMAX --- Y value at top of Y-axis
+    YSIZE --- number of inches for the Y-aixs
+    etc.
+    '''
+    notes = ((10, '{:>10.4f}', YMIN),
+             (10, '{:>10.4f}', YMAX),
+             (10, '{:>10.3f}', YSIZE),
+             (10, '{:>10.3f}', DELY),
+             (5, '{:>5d}', NUMSBY),
+             (5, '{:>5d}', NOENDY),
+             (5, '{:>5d}', IDEC),
+             (5, '{:>5d}', JEMIT),
+             (5, '{:>5d}', JPLOT),
+             (5, '{:>5d}', LOGPLT),
+             (2, '{:>2d}', JHDR),
+             (3, None, None),
+             (2, '{:>2d}', JOUT),
+             (3, '{:>3d}', JPLTFL))
+    return ''.join(length * ' ' if value == None\
+                   else fmtspec.format(value)\
+                   for length, fmtspec, value in notes)    
+
+
 
 def write_fluxcalc_TAPE5(atmpro = 'atmopro.dat',
                          V1 = 8., V2 = 2002.,
@@ -650,8 +722,63 @@ def write_fluxcalc_TAPE5(atmpro = 'atmopro.dat',
     lines_to_write.append('%%%%%')
         
     with open(TAPE5name, mode = 'w', encoding = 'utf-8') as ftape:
-        ftape.writelines('\n'.join(lines_to_write))        
-        
+        ftape.writelines('\n'.join(lines_to_write))
+
+
+
+def write_solar_downwelling_example_TAPE5():
+    '''
+    Returns a long string of TAPE5 in the solar downwelling
+    example that came with LBLRTM
+    '''
+    return '\n'.join(
+        [
+        record_1_1('TAPE5 CH1: 20010311.111321 Transmittance Calculation'),
+        record_1_2(IHIRAC = 1, ILBLF4 = 1, ICNTNM = 1, IAERSL = 0,
+                   IEMIT = 1, ISCAN = 0, IFILTR = 0, IPLOT = 0,
+                   ITEST = 0,  IATM = 1,  IMRG = 0,  ILAS = 0,
+                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0),
+        record_1_3(V1 = 20000, V2 = 22000,
+                   SAMPLE = '', DVSET = '', ALFAL0 = '', AVMASS = '',
+                   DPTMIN = '', DPTFAC = '', ILNFLG = '', DVOUT = '',
+                   NMOL_SCAL = ''),
+        record_1_4(TBOUND = 0,
+                   SREMIS1 = 0, SREMIS2 = 0, SREMIS3 = 0,
+                   SRREFL1 = 0, SRREFL2 = 0, SRREFL3 = 0,
+                   surf_refl = 's'),
+        record_3_1(MODEL = 2, ITYPE = 2, IBMAX = 19, ZERO = 0,
+                   NOPRNT = 0, NMOL = '', IPUNCH = '', IFXTYP = '',
+                   MUNITS = '', RE = '', HSPACE = '', VBAR = '', REF_LAT = ''),
+        record_3_2(H1 = 0., H2 = 100., ANGLE = 0., RANGE = '',
+                   BETA = '', LEN = '', HOBS = ''),
+        record_3_3B(*np.fromstring('0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00\
+        8.00      9.00     10.00     11.00     20.00     30.00     50.00  \
+        70.00  80.00     90.00    100.00', dtype = '<f8', sep = ' ')),
+        '-1.',
+        record_1_1('Convolve transmittance with solar source function'),
+        record_1_2(IHIRAC = 0, ILBLF4 = 0, ICNTNM = 0, IAERSL = 0,
+                   IEMIT = 2, ISCAN = 0, IFILTR = 0, IPLOT = 0,
+                   ITEST = 0,  IATM = 0,  IMRG = 0,  ILAS = 0,
+                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0),
+        record_1_2_1(INFLAG = 0, IOTFLG = 0, JULDAT = 0),
+        '-1.',
+        record_1_1('Transfer to ASCII plotting data (TAPES 27 and 28)'),
+        record_1_2(IHIRAC = 0, ILBLF4 = 0, ICNTNM = 0, IAERSL = 0,
+                   IEMIT = 0, ISCAN = 0, IFILTR = 0, IPLOT = 1,
+                   ITEST = 0,  IATM = 0,  IMRG = 0,  ILAS = 0,
+                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0),
+        '# Plot title not used',
+        record_12_2A(V1 = 20000, V2 = 22000, XSIZE = 10.2, DELV = 100, 
+                     NUMSBX = 5, NOENDX = 0, LFILE = 13, LSKIPF = 0,
+                     SCALE = 1.0, IOPT = 0, I4P = 0, IXDEC = 0),
+        record_12_3A(YMIN = 0, YMAX = 1.2, YSIZE = 7.02, DELY = .2,
+                     NUMSBY = 4, NOENDY = 0, IDEC = 1,
+                     JEMIT = 1, JPLOT = 0, LOGPLT = 0,
+                     JHDR = 0, JOUT = 3, JPLTFL = 27),
+        '-1.',
+        '%%%%%%%'
+        ])
+
 
 
 
