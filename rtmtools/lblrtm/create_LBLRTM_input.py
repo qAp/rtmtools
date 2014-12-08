@@ -726,58 +726,107 @@ def write_fluxcalc_TAPE5(atmpro = 'atmopro.dat',
 
 
 
-def write_solar_downwelling_example_TAPE5():
+def write_solar_downwelling_TAPE5(CXID = 'solar downwelling',
+                                  atmpro = None,
+                                  V1 = 20000, V2 = 22000,
+                                  MODEL = 2,
+                                  H1 = 0, H2 = 100, ANGLE = 0.,
+                                  ):
     '''
     Returns a long string of TAPE5 in the solar downwelling
     example that came with LBLRTM
     '''
-    return '\n'.join(
-        [
-        record_1_1('TAPE5 CH1: 20010311.111321 Transmittance Calculation'),
+    if MODEL == 0:
+        IBMAX = IMMAX = - len(atmpro.index)
+        bound_zp = atmpro['pressure'][:: -1]
+    elif MODEL == 2:
+        print('Using internal mid-latitude summer model')
+        IBMAX = IMMAX = 19
+        bound_zp = np.fromstring('0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00\
+                8.00      9.00     10.00     11.00     20.00     30.00 \
+                50.00 70.00  80.00     90.00    100.00',
+                               dtype = '<f8', sep = ' ')
+    
+    lines = collections.deque([])
+        
+    lines.append(
+        record_1_1(CXID))
+    lines.append(
         record_1_2(IHIRAC = 1, ILBLF4 = 1, ICNTNM = 1, IAERSL = 0,
                    IEMIT = 1, ISCAN = 0, IFILTR = 0, IPLOT = 0,
                    ITEST = 0,  IATM = 1,  IMRG = 0,  ILAS = 0,
-                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0),
-        record_1_3(V1 = 20000, V2 = 22000,
+                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0))
+    lines.append(
+        record_1_3(V1 = V1, V2 = V2,
                    SAMPLE = '', DVSET = '', ALFAL0 = '', AVMASS = '',
                    DPTMIN = '', DPTFAC = '', ILNFLG = '', DVOUT = '',
-                   NMOL_SCAL = ''),
+                   NMOL_SCAL = ''))
+    lines.append(
         record_1_4(TBOUND = 0,
                    SREMIS1 = 0, SREMIS2 = 0, SREMIS3 = 0,
                    SRREFL1 = 0, SRREFL2 = 0, SRREFL3 = 0,
-                   surf_refl = 's'),
-        record_3_1(MODEL = 2, ITYPE = 2, IBMAX = 19, ZERO = 0,
+                   surf_refl = 's'))
+    lines.append(
+        record_3_1(MODEL = MODEL, ITYPE = 2, IBMAX = IBMAX, ZERO = 0,
                    NOPRNT = 0, NMOL = '', IPUNCH = '', IFXTYP = '',
-                   MUNITS = '', RE = '', HSPACE = '', VBAR = '', REF_LAT = ''),
-        record_3_2(H1 = 0., H2 = 100., ANGLE = 0., RANGE = '',
-                   BETA = '', LEN = '', HOBS = ''),
-        record_3_3B(*np.fromstring('0.00 1.00 2.00 3.00 4.00 5.00 6.00 7.00\
-        8.00      9.00     10.00     11.00     20.00     30.00     50.00  \
-        70.00  80.00     90.00    100.00', dtype = '<f8', sep = ' ')),
-        '-1.',
-        record_1_1('Convolve transmittance with solar source function'),
+                   MUNITS = '', RE = '', HSPACE = '', VBAR = '', REF_LAT = ''))
+    lines.append(
+        record_3_2(H1 = H1, H2 = H2, ANGLE = ANGLE, RANGE = '',
+                   BETA = '', LEN = '', HOBS = ''))
+    lines.append(record_3_3B(*bound_zp))
+        
+    if MODEL == 0:
+            lines.append(record_3_3B(*atmpro['pressure'][:: -1]))
+            lines.append(record_3_4(IMMAX = IMMAX))
+            for i in atmpro.index[:: -1]:
+                lines.append(
+                    record_3_5(ZM = atmpro.loc[i, 'altitude'],
+                               PM = atmpro.loc[i, 'pressure'],
+                               TM = atmpro.loc[i, 'temperature'],
+                               JCHARP = 'A',
+                               JCHART = 'A', JLONG = 'L', JCHAR = 'AAAAAAA'))
+                lines.append(
+                    record_3_6('L',
+                               *[atmpro.loc[i, molecule] \
+                                 for molecule in ['H2O', 'CO2', 'O3',\
+                                                  'N2O', 'CO', 'CH4', 'O2']]))
+            else:
+                raise ValueError('Sorry, only MODEL == 0 and MODEL = 2 \
+                are supported at the moment')
+            
+    lines.append('-1.')
+        
+    lines.append(
+        record_1_1('Convolve transmittance with solar source function'))
+    lines.append(
         record_1_2(IHIRAC = 0, ILBLF4 = 0, ICNTNM = 0, IAERSL = 0,
                    IEMIT = 2, ISCAN = 0, IFILTR = 0, IPLOT = 0,
                    ITEST = 0,  IATM = 0,  IMRG = 0,  ILAS = 0,
-                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0),
-        record_1_2_1(INFLAG = 0, IOTFLG = 0, JULDAT = 0),
-        '-1.',
-        record_1_1('Transfer to ASCII plotting data (TAPES 27 and 28)'),
+                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0))
+    lines.append(record_1_2_1(INFLAG = 0, IOTFLG = 0, JULDAT = 0))
+    
+    lines.append('-1.')
+    
+    lines.append(
+        record_1_1('Transfer to ASCII plotting data (TAPES 27 and 28)'))
+    lines.append(
         record_1_2(IHIRAC = 0, ILBLF4 = 0, ICNTNM = 0, IAERSL = 0,
                    IEMIT = 0, ISCAN = 0, IFILTR = 0, IPLOT = 1,
                    ITEST = 0,  IATM = 0,  IMRG = 0,  ILAS = 0,
-                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0),
-        '# Plot title not used',
-        record_12_2A(V1 = 20000, V2 = 22000, XSIZE = 10.2, DELV = 100, 
+                   IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0))
+    lines.append('# Plot title not used')
+    lines.append(
+        record_12_2A(V1 = V1, V2 = V2, XSIZE = 10.2, DELV = 100, 
                      NUMSBX = 5, NOENDX = 0, LFILE = 13, LSKIPF = 0,
-                     SCALE = 1.0, IOPT = 0, I4P = 0, IXDEC = 0),
+                     SCALE = 1.0, IOPT = 0, I4P = 0, IXDEC = 0))
+    lines.append(
         record_12_3A(YMIN = 0, YMAX = 1.2, YSIZE = 7.02, DELY = .2,
                      NUMSBY = 4, NOENDY = 0, IDEC = 1,
                      JEMIT = 1, JPLOT = 0, LOGPLT = 0,
-                     JHDR = 0, JOUT = 3, JPLTFL = 27),
-        '-1.',
-        '%%%%%%%'
-        ])
+                     JHDR = 0, JOUT = 3, JPLTFL = 27))
+    lines.append('-1.')
+    lines.append('%%%%%%%')
+    return '\n'.join(lines)
 
 
 
