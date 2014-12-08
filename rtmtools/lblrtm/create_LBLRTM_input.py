@@ -728,6 +728,7 @@ def write_fluxcalc_TAPE5(atmpro = 'atmopro.dat',
 
 def write_solar_downwelling_TAPE5(CXID = 'solar downwelling',
                                   atmpro = None,
+                                  ICNTNM = 0,
                                   V1 = 20000, V2 = 22000,
                                   MODEL = 2,
                                   H1 = 0, H2 = 100, ANGLE = 0.,
@@ -752,7 +753,7 @@ def write_solar_downwelling_TAPE5(CXID = 'solar downwelling',
     lines.append(
         record_1_1(CXID))
     lines.append(
-        record_1_2(IHIRAC = 1, ILBLF4 = 1, ICNTNM = 1, IAERSL = 0,
+        record_1_2(IHIRAC = 1, ILBLF4 = 1, ICNTNM = ICNTNM, IAERSL = 0,
                    IEMIT = 1, ISCAN = 0, IFILTR = 0, IPLOT = 0,
                    ITEST = 0,  IATM = 1,  IMRG = 0,  ILAS = 0,
                    IOD = 0, IXSECT = 0,  MPTS = 0, NPTS = 0))
@@ -776,7 +777,6 @@ def write_solar_downwelling_TAPE5(CXID = 'solar downwelling',
     lines.append(record_3_3B(*bound_zp))
         
     if MODEL == 0:
-            lines.append(record_3_3B(*atmpro['pressure'][:: -1]))
             lines.append(record_3_4(IMMAX = IMMAX))
             for i in atmpro.index[:: -1]:
                 lines.append(
@@ -790,9 +790,6 @@ def write_solar_downwelling_TAPE5(CXID = 'solar downwelling',
                                *[atmpro.loc[i, molecule] \
                                  for molecule in ['H2O', 'CO2', 'O3',\
                                                   'N2O', 'CO', 'CH4', 'O2']]))
-            else:
-                raise ValueError('Sorry, only MODEL == 0 and MODEL = 2 \
-                are supported at the moment')
             
     lines.append('-1.')
         
