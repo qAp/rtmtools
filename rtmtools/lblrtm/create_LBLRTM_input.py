@@ -96,7 +96,7 @@ def atmopro_mls75pro(outputfilename = 'mls75pro.dat',
     CH4 --- CH4 concentration [g/g]
     O2 --- O2 concentration [g/g]
     '''
-    path_mls75pro = '/nuwa_cluster/home/jackyu/line_by_line/lbl/mls75.pro'
+    path_mls75pro = '/nuwa_cluster/home/jackyu/radiation/crd/atmosphere_profiles/mls75.pro'
     with open(path_mls75pro, mode = 'r', encoding = 'utf-8') as fmls75:
         c = fmls75.read()
         
