@@ -5,7 +5,7 @@ import itertools
 import collections
 import unicodedata
 import pandas
-
+import scipy.io as spio
 
 dict_JCHARP = {'A': 'mb', 'B': 'atm', 'C': 'torr'}
 dict_JCHART = {'A': 'K', 'B': 'C'}
@@ -215,6 +215,29 @@ def atmpro_insert_levels_and_layers(atmpro,
         
     
     
+
+def read_lblrtm_spectral_output_files(readfrom = 'TAPE13',
+                                      max_lines = 1000):
+    '''
+    Returns a list of records from an unformatted Fortran file
+    output by LBLRTM.  This is based on the IDL script
+    read_lbl_file.pro which Karen provided.
+    INPUT:
+    readfrom --- path to the file to read
+    max_lines --- maximum number of lines to read from file
+    '''
+    records = collections.deque([])
+    f = spio.FortranFile(readfrom, mode = 'r')
+    for k in range(max_lines):
+        try:
+            r = f.read_reals()
+            records.append(r)
+        except TypeError:
+            print('Encountered TypeError on read_real().  \
+            Stop reading and exit.')
+            break
+    f.close()
+    return records
 
 
 
