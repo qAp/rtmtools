@@ -7,7 +7,6 @@ import pandas as pd
 import io
 
 import rtmtools.lblrtm.aerutils as aerutils
-import rtmtools.lblrtm.plotting as plotting
 import rtmtools.lblrtm.create_LBLRTM_input as lblrtmin
 
 
