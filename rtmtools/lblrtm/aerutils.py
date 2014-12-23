@@ -443,7 +443,8 @@ def OUTPUT_RADSUM_to_pandasPanel(readfrom = '', cooling_rate = False,
 
 
 def sum_OUTPUT_RADSUM_over_wave_numbers(readfrom = './OUTPUT_RADSUM',
-                                        V1 = 0, V2 = 100):
+                                        V1 = 0, V2 = 100,
+                                        cooling_rate = False):
     '''
     Sum fluxes and cooling rates in OUTPUT_RADSUM over all
     wave numbers and return a Pandas DataFrame 
@@ -452,12 +453,13 @@ def sum_OUTPUT_RADSUM_over_wave_numbers(readfrom = './OUTPUT_RADSUM',
     readfrom --- file path to OUTPUT_RADSUM
     '''
     outrad = OUTPUT_RADSUM_to_pandasPanel(readfrom = readfrom,
-                                          cooling_rate = True,
+                                          cooling_rate = cooling_rate,
                                           signed_fluxes = True)
     DV_band = outrad.items[0][1] - outrad.items[0][0]
+    label_rate = 'cooling_rate' if cooling_rate else 'heating_rate'
     flux_cor_tot = outrad.ix[(V1, V1 + DV_band): (V2 - DV_band, V2), :,
                              ['flux_up', 'flux_down', 'net_flux',
-                              'cooling_rate']].sum(axis = 'items')
+                              label_rate]].sum(axis = 'items')
     pressure = outrad.ix[outrad.items[0], :, 'pressure']
     return pandas.concat([pressure, flux_cor_tot], axis = 1)
 
