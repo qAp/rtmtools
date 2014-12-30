@@ -14,6 +14,7 @@ import rtmtools.lblrtm.create_LBLRTM_input as lblrtmin
 
 
 
+
 def lbl_run_input_params(path_lblf = 'lbl.f',
                          path_lbl_chouf90 = 'lbl_chou.f90',
                          in_the_form = 'dict'):
@@ -65,6 +66,37 @@ def lbl_run_input_params(path_lblf = 'lbl.f',
 
 
 
+def sum_OUTPUT_RADSUM_over_wbands(pnl, V1 = 820., V2 = 50000.,
+                                  names = ['flux_up', 'flux_down',
+                                           'net_flux', 'heating_rate']):
+    '''
+    Sum fluxes and/or rates (heating or cooling) over wavenumbers
+    INPUT:
+    pnl --- Pandas Panel: ((V1, V2), atm level, [pressure, flux up, ..., rate])
+    names --- attributes to sum up over wavenumbers
+    V1, V2 --- lower and upper wavenumber limits in the sum
+    OUTPUT:
+    df --- Pandas DataFrame: (atm level, NAMES)
+    '''
+    V1s, V2s = (lev.values for lev in pnl.items.levels)
+    item1, item2 = (np.abs(vs - v).argmin() 
+                    for vs, v in zip([V1s, V2s], [V1, V2]))
+    print('item1', item1, 'item2', item2)
+    print('v1', pnl.items[item1], 'v2', pnl.items[item2])
+    pnldata = pnl.values
+    dfdata = pnldata[item1 : item2 + 1, :, 1:].sum(axis = 0)
+    df = pd.DataFrame(dfdata, columns = names, index = pnl.major_axis)
+    return pd.concat([pnl.ix[pnl.items[0], :, 'pressure'], df], axis = 1)
+
+    
+# the following doesnt work!!    
+#    return pd.concat([pnl.ix[pnl.items[0], :, 'pressure'],
+#                      pnl.ix[item1: item2 + 1, :, names].sum(axis = 'items')],
+#                     axis = 1)
+
+
+
+
 
 
 def save_OUTPUT_RADSUM_summary(path_OUTPUT_RADSUM = '',
@@ -73,6 +105,7 @@ def save_OUTPUT_RADSUM_summary(path_OUTPUT_RADSUM = '',
                                wavenumber_bands = [(0., 3000.)],
                                atmpro_data_names = ['plevel', 'tlayer',
                                                     'wlayer', 'olayer']):
+    
     '''
     Summarises and writes results of a line-by-line calculation to
     an Excel file
@@ -138,7 +171,40 @@ def save_OUTPUT_RADSUM_summary(path_OUTPUT_RADSUM = '',
 
             
 
-    
+def lines2bands(pnl, wbands = None):
+    '''
+    Group fine wavenumber intervals into bands
+    INPUT:
+    pnl --- Pandas Panel
+            (wavenumber, level, [pressure, flux, ..., heating rate])
+    wbands --- wavenumber bands. a list of tuples.
+    '''
+    return pd.Panel({(V1, V2):
+                     sum_OUTPUT_RADSUM_over_wbands(pnl, V1 = V1, V2 = V2)
+                     for V1, V2 in wbands}) 
+
+
+def normalise_by_TOA_flux_down(pnl, normalise_to = None):
+    '''
+    Normalise top-of-atmosphere downward flux of PNL
+    to a specified value.
+    INPUT:
+    pnl --- flux to be normalised (Pandas Panel)
+    normalise_to --- if a scalar value, the value to normalise to
+                     if another Pandas Panel, normalise to its
+                     top-of-atmosphere downward flux
+    '''
+    names = ['flux_up', 'flux_down', 'net_flux']
+    for item in pnl.items:
+        df1, df2 = pnl[item], normalise_to[item]
+        df1.loc[:, names] *= (
+            df2.loc[df1.index[0], 'flux_down'] /
+            df1.loc[df1.index[0], 'flux_down'])
+    return pnl
+            
+
+        
+
 
 
 
