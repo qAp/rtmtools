@@ -28,6 +28,7 @@ def sum_OUTPUT_RRTM_over_wbands(pnl,
     V1s, V2s = (lev.values for lev in pnl.items.levels)
     item1, item2 = (np.abs(vs - v).argmin() 
                     for vs, v in zip([V1s, V2s], [V1, V2]))
+    print(item1, item2)
     return pd.concat([pnl.ix[pnl.items[0], :, 'pressure'],
-                      pnl.ix[item1: item2, :, names].sum(axis = 'items')],
+                      pnl.ix[item1: item2 + 1, :, names].sum(axis = 'items')],
                      axis = 1)
