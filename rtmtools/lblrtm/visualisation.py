@@ -11,18 +11,32 @@ import matplotlib.pyplot as plt
 
 
 
-def tabulate_difference(df1, df2, names = ['df1', 'df2'], title = None):
+def tabulate_difference(dfs, names = None, title = None,
+                        difference_only = False):
     '''
-    Prints out the results of DF2 subtracted from DF1
+    Prints out the difference between all pairs of Data Frames
+    in DFS.  Set DIFFERENCE_ONLY to TRUE to not to print out
+    values of each Data Frame in DFS.
+    INPUT:
+    names --- list of strings, names for each Data Frame in DFS
+    title --- string to be written at the very top
     '''
+    df_pairs = itertools.combinations(zip(names, dfs), 2)
+
     print()
     print(title)
-    print(names[0])
-    print(df1)
-    print(names[1])
-    print(df2)
-    print('{} - {}'.format(*names))
-    print(df1 - df2)
+    
+    if not difference_only:
+        for name, df in zip(names, dfs):
+            print()
+            print('{}'.format(name))
+            print(df)
+    
+    for (name1, df1), (name2, df2) in df_pairs:
+        print()
+        print('{} - {}'.format(name1, name2))
+        print(df1 - df2)
+
     print()
 
 
