@@ -20,7 +20,8 @@ def line_count(path_molecule):
                   mode = 'r', encoding = 'utf-8') as file:
             lines = file.readlines()
             for line in lines:
-                if line.startswith(' '):
+                if line.startswith('{:>2d}'\
+                                   .format(int(path_molecule.split('_')[0]))):
                     linecount[path_molecule] += 1
         return linecount[path_molecule]
 
