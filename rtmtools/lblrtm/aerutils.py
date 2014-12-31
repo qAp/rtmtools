@@ -1,10 +1,12 @@
 import os
 import sys
+import io
 import numpy as np
 import itertools
 import collections
 import unicodedata
 import pandas
+import pandas as pd
 import scipy.io as spio
 
 dict_JCHARP = {'A': 'mb', 'B': 'atm', 'C': 'torr'}
@@ -398,70 +400,46 @@ def write_atmpro_txtfile(atmpro = None,
 
 
 def OUTPUT_RADSUM_to_pandasPanel(readfrom = '', cooling_rate = False,
-                                 signed_fluxes = False):
+                               signed_fluxes = False):
+
     '''
-    Converts table in OUTPUT_RADSUM to a Pandas Panel
+    Read and convert OUTPUT_RRTM file from RRTMG-SW to Pandas
+    Panel object
     '''
     with open(readfrom, mode = 'r', encoding = 'utf-8') as file:
-        content = file.read()
+        c = file.read()
 
-    content_wbs = (content_wb.strip()
-                   for content_wb in content.split('WAVENUMBER BAND')
-                   if content_wb and not content_wb.isspace())
-
-    datas = collections.deque([])
-    wbranges = collections.deque([])
+    content_wbs = [s.strip()
+                   for s in c.split('WAVENUMBER BAND:')
+                   if s and not s.isspace()]
+    data = {}
     for content_wb in content_wbs:
-        lines = (line.strip() for line in content_wb.split('\n')
-        if line and not line.isspace())
-        wbranges.append(tuple(float(w)
-                              for w in next(lines).split()
-                              if is_number(w) and float(w) >= 0))
-        [next(lines) for _ in range(3)]
-        datas.append(np.array([[float(n) for n in line.split()] \
-                               for line in lines if len(line.split()) == 6]))
+        l1 = content_wb.split('\n', maxsplit = 1)[0]
+        V1, V2 = [float(v) for v in l1.split('CM')[0].split('-')]
+        df = pd.read_csv(io.StringIO(content_wb),
+                         header = None, skiprows = 4, index_col = [0],
+                         sep = r'\s+')
+        df.index.name = None
+        data[(V1, V2)] = df
 
-    datas = np.array(datas)
+    pnl = pd.Panel(data)
+
     if cooling_rate:
-        datas[:, :, -1] = - datas[:, :, -1]
+        pnl.values[:, :, -1] *= -1
         rate_label = 'cooling_rate'
     else:
         rate_label = 'heating_rate'
 
     if signed_fluxes:
-        datas[:, : , 2] = - datas[:, :, 2]
-        datas[:, :, 4] = datas[:, :, 2] + datas[:, :, 3]
+        pnl.values[:, :, 1] *= -1
+        pnl.values[:, :, 3] = pnl.values[:, :, 1] + pnl.values[:, :, 2]
 
-    return pandas.Panel(datas[:, :, 1:],
-                        items = pandas.MultiIndex.from_tuples(list(wbranges),
-                                                              names = ['V1', 'V2']),
-                        major_axis = datas[0, :, 0],
-                        minor_axis = ('pressure', 'flux_up', 'flux_down',
-                                      'net_flux', rate_label))
+    pnl.minor_axis = ['pressure', 'flux_up',
+                      'flux_down', 'net_flux', rate_label]
+    return pnl
 
 
 
-
-def sum_OUTPUT_RADSUM_over_wave_numbers(readfrom = './OUTPUT_RADSUM',
-                                        V1 = 0, V2 = 100,
-                                        cooling_rate = False):
-    '''
-    Sum fluxes and cooling rates in OUTPUT_RADSUM over all
-    wave numbers and return a Pandas DataFrame 
-    (number of levels, ..., 0) x (pressure, flux up, flux down, net flux, coolin rate)
-    INPUT:
-    readfrom --- file path to OUTPUT_RADSUM
-    '''
-    outrad = OUTPUT_RADSUM_to_pandasPanel(readfrom = readfrom,
-                                          cooling_rate = cooling_rate,
-                                          signed_fluxes = True)
-    DV_band = outrad.items[0][1] - outrad.items[0][0]
-    label_rate = 'cooling_rate' if cooling_rate else 'heating_rate'
-    flux_cor_tot = outrad.ix[(V1, V1 + DV_band): (V2 - DV_band, V2), :,
-                             ['flux_up', 'flux_down', 'net_flux',
-                              label_rate]].sum(axis = 'items')
-    pressure = outrad.ix[outrad.items[0], :, 'pressure']
-    return pandas.concat([pressure, flux_cor_tot], axis = 1)
 
 
 
