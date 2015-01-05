@@ -43,12 +43,6 @@ O2  = 0.
 
 
 
-'''
-Path to Chou\'s mls75pro atmosphere profile (this should be the formatted\
-Fortran file)
-'''
-path_mls75pro = ''
-
 
 
 
@@ -65,6 +59,7 @@ if __name__ == '__main__':
     import numpy as np
     import rtmtools.lblrtm.create_LBLRTM_input as lblrtmin
     import rtmtools.lblrtm.aerutils as aerutils
+    import rtmtools.lblrtm.aeranalyse as aeranalyse
 
     # Get atmpro DataFrame
     lblrtmin.atmopro_mls75pro(outputfilename = 'mls75pro.dat',
@@ -85,7 +80,7 @@ if __name__ == '__main__':
     H2 = df_atmpro['pressure'][df_atmpro.index[0]]
     dfs = collections.deque([])
     
-    for indx in df_atmpro.index[1: 3]:
+    for indx in df_atmpro.index[1: 10]:
         H1 = df_atmpro['pressure'][indx]
         print('H1 = ', H1, 'mb')
 
@@ -128,12 +123,22 @@ if __name__ == '__main__':
     # change radiance to flux (using instructions by Karen)
     df_allrad *= 6.8e-1 * np.cos(np.deg2rad(ANGLE))
     
-    print(df_allrad.shape)
-    print(df_allrad.columns)
-    print(df_allrad.index)
-    print(df_allrad.head())
-    print(df_allrad.tail())
-    
+    # set upward flux to zero for pressure
+    df_flux_up = pd.DataFrame(np.zeros(df_allrad.shape),
+                              index = df_allrad.index,
+                              columns = df_allrad.columns)
+
+    df_net_flux = df_flux_up + df_allrad
+
+    # compute heating rate from net flux
+    df_heating_rate = aeranalyse.netflux_to_heating_rate(df_net_flux.T).T
+
+    pnl = pd.Panel.from_dict({'flux_up': df_flux_up,
+                              'flux_down': df_allrad,
+                              'net_flux': df_net_flux,
+                              'heating_rate': df_heating_rate})
+    pnl = pnl.transpose(1, 2, 0)
+    pnl = pnl.ix[:, :, ['flux_up', 'flux_down', 'net_flux', 'heating_rate']]
     
 
 
