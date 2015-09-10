@@ -42,7 +42,8 @@ def tabulate_difference(dfs, names = None, title = None,
 
 def plot_pres_vs_flux_down(dfs,
                            names = None, linestyles = None, colours = None,
-                           title = None):
+                           title = None,
+                           pres_scale = 'linear'):
     '''
     Plot pressure versus flux down for one or more Data Frames
     '''
@@ -62,7 +63,7 @@ def plot_pres_vs_flux_down(dfs,
 
     [plt.setp(line, linestyle = style, color = colour, linewidth = 2)\
      for line, style, colour in zip(lines, linestyles, colours)]
-    ax.set_yscale('linear')
+    ax.set_yscale(pres_scale)
     ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
     plt.grid(b = True)
     plt.legend(names, loc = 'best')
@@ -73,7 +74,8 @@ def plot_pres_vs_flux_down(dfs,
 def plot_pres_vs_hrcr(dfs,
                       names = None, linestyles = None, colours = None,
                       title = None,
-                      cooling_rate = False):
+                      cooling_rate = False,
+                      pres_scale = 'linear'):
     '''
     Plot pressure versus rate of either heating or cooling
     given for Data Frames
@@ -94,7 +96,7 @@ def plot_pres_vs_hrcr(dfs,
 
     [plt.setp(line, linestyle = style, color = colour, linewidth = 2.)\
      for line, style, colour in zip(lines, linestyles, colours)]
-    ax.set_yscale('log')
+    ax.set_yscale(pres_scale)
     ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
     plt.grid(b = True)
     plt.legend(names, loc = 'best')
