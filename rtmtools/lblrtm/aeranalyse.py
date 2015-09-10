@@ -124,6 +124,18 @@ def normalise_by_TOA_flux_down(pnl, normalise_to = None):
     return pnl
             
 
+
+
+def netflux_to_heating_rate(df):
+    '''
+    Computes heating rate from level pressures and net fluxes
+    '''
+    pres, netflux = df.index.values, df.values
+    hr_data = (netflux[: -1] - netflux[1:]) / \
+              (pres[1:] - pres[: -1])[:, np.newaxis] * 8.4410
+    hr_data = np.concatenate([np.zeros(hr_data[0, :][np.newaxis, :].shape), \
+                              hr_data], axis = 0)
+    return pd.DataFrame(hr_data, index = df.index, columns = df.columns)
         
 
 
