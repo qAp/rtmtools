@@ -17,12 +17,19 @@ def output_txtfile_to_DataFrame(readfrom = './tt-output-now.dat'):
     with open(readfrom, mode = 'r', encoding = 'utf-8') as file:
         c = file.read()
 
-    lines = [line for line in c.split('(C/day)')[-1].split('\n') \
-             if line and not line.isspace()][: -6]
 
-    toprow = lines[0].split()[1:] + [np.nan]
+    lines = [line for line in c.split('******  RESULTS  ******')[-1].split('\n') \
+             if line and not line.isspace()] 
+
+    columns = lines[0].split()
+    columns[-2] = ' '.join(columns[-2: ])
+    columns.pop()
+    
+    datalines = lines[2: 2 + 2 * 75 + 1] # for 75 layers and 76 levels
+
+    toprow = datalines[0].split()[1:] + [np.nan]
     restrows = [lev.split()[1:] + [lay] \
-               for lay, lev in itertools.zip_longest(*(2 * [iter(lines[1:])]))]
+               for lay, lev in itertools.zip_longest(*(2 * [iter(datalines[1:])]))]
 
     data = np.array([toprow] + restrows).astype('f8')
     return pd.DataFrame(data = data[:: -1], columns = columns).\
