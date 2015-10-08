@@ -84,20 +84,37 @@ def plot_pres_vs_hrcr(dfs,
     pressures = [.5 * (df['pressure'].values[: -1] +
                        df['pressure'].values[1: ]) for df in dfs]
     rates = [df[rate_label].values[1:] for df in dfs]
-    xys = itertools.chain(*zip(rates, pressures))
+    xys = list(itertools.chain(*zip(rates, pressures)))
 
-    matplotlib.rcParams.update({'font.size': 20})
-    fig = plt.figure(figsize = (8, 8))
-    ax = fig.add_subplot(111,
-                         title = title if title else '',
+    matplotlib.rcParams.update({'font.size': 15})
+    fig = plt.figure(figsize = (15, 8))
+    
+    ax = fig.add_subplot(121,
                          xlabel = '{} [deg/day]'.format(rate_label),
                          ylabel = 'pressure [mb]')
     lines = ax.plot(*xys)
 
     [plt.setp(line, linestyle = style, color = colour, linewidth = 2.)\
      for line, style, colour in zip(lines, linestyles, colours)]
-    ax.set_yscale(pres_scale)
+
     ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
-    plt.grid(b = True)
-    plt.legend(names, loc = 'best')
-    plt.gca().invert_yaxis()
+    ax.grid(b = True)
+    ax.legend(names, loc = 'best')
+    ax.invert_yaxis()
+    ax.set_yscale('linear')
+
+    axlog = fig.add_subplot(122,
+                            xlabel = '{} [deg/day]'.format(rate_label),
+                            ylabel = 'pressure [mb]')
+    lines = axlog.plot(*xys)
+    [plt.setp(line, linestyle = style, color = colour, linewidth = 2.)\
+     for line, style, colour in zip(lines, linestyles, colours)]
+    axlog.xaxis.get_major_formatter().set_powerlimits((0, 1))
+    axlog.grid(b = True)
+    axlog.legend(names, loc = 'best')
+    axlog.invert_yaxis()
+    axlog.set_yscale('log')
+
+    fig.suptitle(title if title else '', fontsize = 15)
+
+    
