@@ -4,7 +4,7 @@ import numpy as np
 import itertools
 import collections
 import fileinput
-import create_LBLRTM_input as lblrtmin
+import rtmtools.lblrtm.create_LBLRTM_input as lblrtmin
 
 
 def filepath_TAPE3():
@@ -44,7 +44,7 @@ def lblrtm(atmpro = 'atmopro.dat',
     os.symlink(filepath_TAPE3(), 'TAPE3')
     os.symlink(filepath_lblrtm(), 'lblrtm')
     print('Running LBLRTM')
-    os.system('lblrtm')
+    os.system('./lblrtm')
 
 
 def radsum(atmpro = 'atmopro.dat', V1 = 10., V2 = 2000.,
@@ -59,7 +59,7 @@ def radsum(atmpro = 'atmopro.dat', V1 = 10., V2 = 2000.,
                              OUTINRAT = OUTINRAT, NANG = NANG)
     os.symlink(filepath_radsum(), 'radsum')
     print('Running RADSUM')
-    os.system('radsum')
+    os.system('./radsum')
 
 
 def run(atmpro = 'atmopro.dat', CXID = 'Verify RADSUM run_example',
