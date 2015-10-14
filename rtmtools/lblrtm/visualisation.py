@@ -75,7 +75,7 @@ def plot_pres_vs_hrcr(dfs,
                       names = None, linestyles = None, colours = None,
                       title = None,
                       cooling_rate = False,
-                      pres_scale = 'linear'):
+                      xlim_linear = None, xlim_log = None):
     '''
     Plot pressure versus rate of either heating or cooling
     given for Data Frames
@@ -102,6 +102,8 @@ def plot_pres_vs_hrcr(dfs,
     ax.legend(names, loc = 'best')
     ax.invert_yaxis()
     ax.set_yscale('linear')
+    if xlim_linear:
+        ax.set_xlim(xlim_linear)
 
     axlog = fig.add_subplot(122,
                             xlabel = '{} [deg/day]'.format(rate_label),
@@ -114,6 +116,8 @@ def plot_pres_vs_hrcr(dfs,
     axlog.legend(names, loc = 'best')
     axlog.invert_yaxis()
     axlog.set_yscale('log')
+    if xlim_log:
+        axlog.set_xlim(xlim_log)
 
     fig.suptitle(title if title else '', fontsize = 15)
 
