@@ -84,7 +84,14 @@ def plot_pres_vs_hrcr(dfs,
     pressures = [.5 * (df['pressure'].values[: -1] +
                        df['pressure'].values[1: ]) for df in dfs]
     rates = [df[rate_label].values[1:] for df in dfs]
-    xys = list(itertools.chain(*zip(rates, pressures)))
+
+    dfs_rates = [pd.Series(df[rate_label].values[1:],
+                             index = .5 * (df['pressure'].values[: -1] \
+                                           + df['pressure'].values[1: ]))
+                for df in dfs]
+
+    xys = list(itertools.chain(*[(df_rates.values, df_rates.index.values) \
+                                 for df_rates in dfs_rates]))
 
     matplotlib.rcParams.update({'font.size': 15})
     fig = plt.figure(figsize = (15, 8))
@@ -92,32 +99,54 @@ def plot_pres_vs_hrcr(dfs,
     ax = fig.add_subplot(121,
                          xlabel = '{} [deg/day]'.format(rate_label),
                          ylabel = 'pressure [mb]')
+    
     lines = ax.plot(*xys)
 
     [plt.setp(line, linestyle = style, color = colour, linewidth = 2.)\
      for line, style, colour in zip(lines, linestyles, colours)]
 
+    if xlim_linear:
+        ax.set_xlim(xlim_linear)
+    else:
+        xmin = min([df[df.index > 1e0].min() for df in dfs_rates])
+        xmax = max([df[df.index > 1e0].max() for df in dfs_rates])
+        dx = xmax - xmin
+        xmin -= .1 * dx
+        xmax += .1 * dx
+        ax.set_xlim((xmin, xmax))
+        
     ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
     ax.grid(b = True)
     ax.legend(names, loc = 'best')
     ax.invert_yaxis()
     ax.set_yscale('linear')
-    if xlim_linear:
-        ax.set_xlim(xlim_linear)
+
 
     axlog = fig.add_subplot(122,
                             xlabel = '{} [deg/day]'.format(rate_label),
                             ylabel = 'pressure [mb]')
-    lines = axlog.plot(*xys)
+    
+    lines_log = axlog.plot(*xys)
+    
     [plt.setp(line, linestyle = style, color = colour, linewidth = 2.)\
-     for line, style, colour in zip(lines, linestyles, colours)]
+     for line, style, colour in zip(lines_log, linestyles, colours)]
+    
     axlog.xaxis.get_major_formatter().set_powerlimits((0, 1))
     axlog.grid(b = True)
     axlog.legend(names, loc = 'best')
     axlog.invert_yaxis()
     axlog.set_yscale('log')
+    
     if xlim_log:
         axlog.set_xlim(xlim_log)
+    else:
+        xmin = min([df[df.index < 1e0].min() for df in dfs_rates])
+        xmax = max([df[df.index < 1e0].max() for df in dfs_rates])
+        dx = xmax - xmin
+        xmin -= .1 * dx
+        xmax += .1 * dx
+        axlog.set_xlim((xmin, xmax))
+
 
     fig.suptitle(title if title else '', fontsize = 15)
 
