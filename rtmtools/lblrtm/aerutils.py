@@ -424,6 +424,7 @@ def OUTPUT_RADSUM_to_pandasPanel(readfrom = '', cooling_rate = False,
 
     pnl = pd.Panel(data)
 
+
     if cooling_rate:
         pnl.values[:, :, -1] *= -1
         rate_label = 'cooling_rate'
@@ -432,8 +433,22 @@ def OUTPUT_RADSUM_to_pandasPanel(readfrom = '', cooling_rate = False,
 
     if signed_fluxes:
         pnl.values[:, :, 1] *= -1
-        pnl.values[:, :, 3] = pnl.values[:, :, 1] + pnl.values[:, :, 2]
-
+        try:
+            pnl.values[:, :, 3] = pnl.values[:, :, 1] + pnl.values[:, :, 2]
+        except TypeError:
+            pnl.items.names = ['V1', 'V2']
+            print('''The following bands contain values that might not be valid floats. \n
+This might be the case if you compiled Fortran with -r8 and have not left enough spaces \n
+for very small numbers like 1.11111e-123 in the ASCII file, so it becomes 1.11111-123.''')
+            print(pnl.dtypes[pnl.dtypes != 'float64'])
+            print()
+            print('Setting these invalid floats to zero')
+            for item, df in pnl.ix[pnl.dtypes != 'float64'].iteritems():
+                pnl[item] = df.applymap(lambda x: float(x) \
+                                        if is_number(x) else 0.)
+                
+            pnl.values[:, :, 3] = pnl.values[:, :, 1] + pnl.values[:, :, 2]
+            
     pnl.minor_axis = ['pressure', 'flux_up',
                       'flux_down', 'net_flux', rate_label]
     return pnl
