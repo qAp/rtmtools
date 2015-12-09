@@ -113,8 +113,13 @@ def plot_pres_vs_hrcr(dfs,
     if xlim_linear:
         ax.set_xlim(xlim_linear)
     else:
-        xmin = min([df[df.index > 1e0].min() for df in dfs_rates])
-        xmax = max([df[df.index > 1e0].max() for df in dfs_rates])
+        if ylim:
+            ymin, ymax = ylim
+            xmin = min([df[(df.index > 1e0) & (df.index < ymax)].min() for df in dfs_rates])
+            xmax = max([df[(df.index > 1e0) & (df.index < ymax)].max() for df in dfs_rates])
+        else:
+            xmin = min([df[df.index > 1e0].min() for df in dfs_rates])
+            xmax = max([df[df.index > 1e0].max() for df in dfs_rates])
         dx = xmax - xmin
         xmin -= .1 * dx
         xmax += .1 * dx
@@ -142,8 +147,13 @@ def plot_pres_vs_hrcr(dfs,
     if xlim_log:
         axlog.set_xlim(xlim_log)
     else:
-        xmin = min([df[df.index < 1e0].min() for df in dfs_rates])
-        xmax = max([df[df.index < 1e0].max() for df in dfs_rates])
+        if ylim:
+            ymin, ymax = ylim
+            xmin = min([df[(df.index < 1e0) & (df.index > ymin)].min() for df in dfs_rates])
+            xmax = max([df[(df.index < 1e0) & (df.index > ymin)].max() for df in dfs_rates])
+        else:
+            xmin = min([df[df.index < 1e0].min() for df in dfs_rates])
+            xmax = max([df[df.index < 1e0].max() for df in dfs_rates])
         dx = xmax - xmin
         xmin -= .1 * dx
         xmax += .1 * dx
