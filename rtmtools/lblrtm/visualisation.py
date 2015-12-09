@@ -75,7 +75,8 @@ def plot_pres_vs_hrcr(dfs,
                       names = None, linestyles = None, colours = None,
                       title = None,
                       cooling_rate = False,
-                      xlim_linear = None, xlim_log = None):
+                      xlim_linear = None, xlim_log = None,
+                      ylim = None):
     '''
     Plot pressure versus rate of either heating or cooling
     given for Data Frames
@@ -105,6 +106,10 @@ def plot_pres_vs_hrcr(dfs,
     [plt.setp(line, linestyle = style, color = colour, linewidth = 2.)\
      for line, style, colour in zip(lines, linestyles, colours)]
 
+    ax.grid(b = True)
+    ax.legend(names, loc = 'best')
+
+    ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
     if xlim_linear:
         ax.set_xlim(xlim_linear)
     else:
@@ -114,12 +119,11 @@ def plot_pres_vs_hrcr(dfs,
         xmin -= .1 * dx
         xmax += .1 * dx
         ax.set_xlim((xmin, xmax))
-        
-    ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
-    ax.grid(b = True)
-    ax.legend(names, loc = 'best')
-    ax.invert_yaxis()
+
+    if ylim:
+        ax.set_ylim(ylim)
     ax.set_yscale('linear')
+    ax.invert_yaxis()
 
 
     axlog = fig.add_subplot(122,
@@ -130,13 +134,11 @@ def plot_pres_vs_hrcr(dfs,
     
     [plt.setp(line, linestyle = style, color = colour, linewidth = 2.)\
      for line, style, colour in zip(lines_log, linestyles, colours)]
-    
-    axlog.xaxis.get_major_formatter().set_powerlimits((0, 1))
+
     axlog.grid(b = True)
     axlog.legend(names, loc = 'best')
-    axlog.invert_yaxis()
-    axlog.set_yscale('log')
-    
+        
+    axlog.xaxis.get_major_formatter().set_powerlimits((0, 1))
     if xlim_log:
         axlog.set_xlim(xlim_log)
     else:
@@ -146,6 +148,11 @@ def plot_pres_vs_hrcr(dfs,
         xmin -= .1 * dx
         xmax += .1 * dx
         axlog.set_xlim((xmin, xmax))
+
+    if ylim:
+        axlog.set_ylim(ylim)    
+    axlog.set_yscale('log')
+    axlog.invert_yaxis()
 
 
     fig.suptitle(title if title else '', fontsize = 15)
