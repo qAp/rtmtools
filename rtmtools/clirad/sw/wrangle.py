@@ -6,6 +6,8 @@ import io
 
 import numpy as np
 import pandas as pd
+import xray
+
 
 
 def output_txtfile_to_DataFrame(readfrom = './tt-output-now.dat'):
@@ -77,4 +79,57 @@ def OUTPUT_CLIRAD_to_PandasPanel(readfrom = 'OUTPUT_CLIRAD.dat',
         
 
 
+def load_clirad_solirgpts(fpath, signed_fluxes = False, cooling_rate = False):
+    '''
+    Loads into an Xray Dataset the fluxes and heating rate output from CLIRAD-SW
+    for all solir spectral bands, all g-points, and all atmosphere layers.
+    INPUT:
+    fpath --- path of headered csv files where the columns are:
+    spectral band index
+    g-point index
+    atmosphere level index
+    atmosphere pressure [mbar]
+    upward flux [W / m2]
+    downward flux [W / m2]
+    net flux [W / m2]
+    heating rate [deg / day]
+    signed_fluxes --- False for all positive valued fluxes
+    True for downward fluxes to be negative and upward fluxes to be positive
+    cooling_rate --- add a DataArray for cooling rate to the output Dataset
+    OUTPUT:
+    ds --- Xray Dataset,
+    with dimensions:
+    ib --- spectral band
+    ik --- g-point
+    pressure --- pressure at levels (interfaces)
+    layer_pressure --- pressure at layers (levels)
+    with data variables:
+    flux_up --- upward flux
+    flux_down --- downward flux
+    net_flux --- net flux
+    heating_rate --- heating rate
+    [cooling_rate] --- cooling rate
+    '''
+    df = pd.read_csv(fpath, sep = r'\s+', skiprows = [0], header = None,
+                     names = ['ib', 'ik', 'k', \
+                              'pressure', 'flux_up', 'flux_down', 'net_flux', 'heating_rate'])
     
+    df.drop(axis = 1, labels = ['k'], inplace = True) # drop level indices to avoid creating extra dimension
+    df.set_index(['ib', 'ik', 'pressure'], inplace = True)
+    
+    ds = xray.Dataset.from_dataframe(df)
+    
+    layer_pressure_values = .5 * (ds.coords['pressure'][: -1].values + ds.coords['pressure'][1:].values)
+    ds.coords['layer_pressure'] = layer_pressure_values
+    
+    da_heating_rates = ds['heating_rate'].sel(pressure = ds.coords['pressure'][1:])
+    ds['heating_rate'] = (['ib', 'ik', 'layer_pressure'], da_heating_rates)
+    
+    if cooling_rate:
+        ds['cooling_rate'] = - ds['heating_rate']
+        
+    if signed_fluxes:
+        ds['flux_up'] *= -1
+        ds['net_flux'] = ds['flux_up'] + ds['flux_down']
+        
+    return ds
