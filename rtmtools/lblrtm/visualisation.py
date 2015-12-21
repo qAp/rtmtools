@@ -11,6 +11,10 @@ import matplotlib.pyplot as plt
 
 
 
+
+
+
+
 def tabulate_difference(dfs, names = None, title = None,
                         difference_only = False):
     '''
@@ -168,3 +172,101 @@ def plot_pres_vs_hrcr(dfs,
     fig.suptitle(title if title else '', fontsize = 15)
 
     
+
+
+def plot_pdseries_indexVSvalues_linearlog(srss = None,
+                                          names = None,
+                                          colours = None, linestyles = None, markers = None,
+                                          ylim = None,
+                                          xlim_linear = None, xlim_log = None,
+                                          title = None, ylabel = None, xlabel = None,
+                                          figsize = (8, 5)):
+    '''
+    Plots index versus values for one or more Pandas.Series,
+    for both linear and log y-scales.
+    
+    When y-scale is linear, x-axis limits are the minimum and maximum
+    values for the range of y above 1.  When y-scale log, x-axis limits
+    are the minumum and maximum values for the range of y below 1.
+    
+    INPUT:
+    srss --- list of Pandas series to plot
+    names --- corresponding list of strings to label the above; these are used in the legend
+    colours --- corresponding list of matplotlib colours (e.g. \'k\', \'r\', etc.)
+    linestyles --- corresponding list of matplotlib linestyles (e.g. \'-\', \'--\', etc.)
+    markers --- corresponding list of matplotlib markers (e.g. \'o\', \'+\', etc.)
+    ylim --- a tuple of length two containing the lower and upper limits on the y-axis
+    xlim_linear --- a tuple of length two containing the lower and upper limits on the linear x-axis
+    xlim_log --- a tuple of length two containing the lower and upper limits on the log x-axis
+    title --- string containing the title of the figure
+    xlabel --- string containing the x-axis label
+    ylabel --- string containing the y-axis label
+    figsize --- tuple of length two containing the width and height, in centimetres, of the figure
+    OUTPUT:
+    fig --- matplotlib figure object for the plot
+    '''
+    xys = list(itertools.chain(*[(srs.values, srs.index.values) for srs in srss]))
+    
+    if not markers:
+        markers = [None for _ in range(len(xys))]
+        
+    if not linestyles:
+        linestyles = ['None' for _ in range(len(xys))]
+        
+    fig, axs = plt.subplots(nrows = 1, ncols = 2, figsize = figsize)
+    
+    for yscale, ax in zip(('linear', 'log'), axs):
+        
+        lines = ax.plot(*xys)
+        
+        [plt.setp(line, \
+                  linestyle = style, color = colour, marker = marker,\
+                  linewidth = 2.)\
+         for line, style, colour, marker in zip(lines, linestyles, colours, markers)]
+        
+        ax.set_title(title)
+        ax.grid(b = True)
+        ax.legend(names, loc = 'best')
+
+        if ylim:
+            ax.set_ylim(ylim)
+        ax.set_yscale(yscale)
+        ax.invert_yaxis()
+        ax.set_ylabel(ylabel)
+        
+        if yscale == 'linear':
+            if xlim_linear:
+                ax.set_xlim(xlim_linear)
+            else:
+                if ylim:
+                    ymin, ymax = ylim
+                    xmin = min([srs[(srs.index > 1e0) & (srs.index < ymax)].min() for srs in srss])
+                    xmax = max([srs[(srs.index > 1e0) & (srs.index < ymin)].max() for srs in srss])
+                else:
+                    xmin = min([srs[srs.index > 1e0].min() for srs in srss])
+                    xmax = max([srs[srs.index > 1e0].max() for srs in srss])
+                    
+                dx = xmax - xmin
+                xmin -= .1 * dx
+                xmax += .1 * dx
+                ax.set_xlim((xmin, xmax))
+        elif yscale == 'log':
+            if xlim_log:
+                ax.set_xlim(xlim_log)
+            else:
+                if ylim:
+                    ymin, ymax = ylim
+                    xmin = min([srs[(srs.index < 1e0) & (srs.index > ymin)].min() for srs in srss])
+                    xmax = max([srs[(srs.index < 1e0) & (srs.index > ymin)].max() for srs in srss])
+                else:
+                    xmin = min([srs[srs.index < 1e0].min() for srs in srss])
+                    xmax = max([srs[srs.index < 1e0].max() for srs in srss])
+                    
+                dx = xmax - xmin
+                xmin -= .1 * dx
+                xmax += .1 * dx
+                ax.set_xlim((xmin, xmax))
+                
+        ax.xaxis.get_major_formatter().set_powerlimits((0, 1))
+        ax.set_xlabel(xlabel)
+    return fig
