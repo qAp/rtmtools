@@ -3,17 +3,82 @@ import io
 import itertools
 import collections
 import sys
+import random
 import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
+
+
+def matplotlib_basic_colours():
+    '''
+    Returns a list of plot colours available in matplotlib.
+    The colours in this list are easily distinguished from each
+    other by eye.
+    '''
+    return ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+
+
+
+def matplotlib_nonnothing_linestyles(longname = False):
+    '''
+    Returns the list of plot linestyles available in matplotlib.
+    Linestyles that are invisible are left out of this list.
+    '''
+    if longname:
+        return [v for k, v in Line2D.markers.items() if v != '_draw_nothing']
+    else:
+        return [k for k, v in Line2D.lineStyles.items() if v != '_draw_nothing']
+    
+    
+    
+def matplotlib_nonnothing_markers(longname = False):
+    '''
+    Returns the list of plot markers available in matplotlib.
+    Markers that are invisible are left out of this list.
+    '''
+    if longname:
+        return [v for k, v in Line2D.markers.items() if v != 'nothing']
+    else:
+        return [k for k, v in Line2D.markers.items() if v != 'nothing']
+    
+
+
+def matplotlib_colour_linestyle_tuples(N = 10):
+    '''
+    Returns a shuffled list of unique tuples of plot colours and linestyles
+    of length Npairs.
+    INPUT:
+    Npairs --- length of list returned,
+    the number of unique tuples of plot colours and linestyles returned.
+    '''
+    colours = matplotlib_basic_colours()
+    linestyles = matplotlib_nonnothing_linestyles()
+    
+    uniques = list(itertools.product(colours, linestyles))
+    
+    random.shuffle(uniques)
+    return random.sample(uniques, N)
 
 
 
 
+def matplotlib_colour_linestyle_marker_tuples(N = 10):
+    colours = matplotlib_basic_colours()
+    linestyles = matplotlib_nonnothing_linestyles()
+    markers = matplotlib_nonnothing_markers()
+    
+    uniques = list(itertools.product(colours, linestyles, markers))
+    
+    random.shuffle(uniques)
+    return random.sample(uniques, N)
 
 
 
+
+                                                                
 
 def tabulate_difference(dfs, names = None, title = None,
                         difference_only = False):
