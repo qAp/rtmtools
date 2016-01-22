@@ -75,6 +75,85 @@ def OUTPUT_CLIRAD_to_PandasPanel(readfrom = 'OUTPUT_CLIRAD.dat',
     
     pnl.minor_axis = ['pressure', 'flux_up', 'flux_down', 'net_flux', rate_label]
     return pnl
+
+
+
+
+def layer_pressure(func):
+    def callf(*args, **kwargs):
+        ds = func(*args, **kwargs)
+        layer_pressure_values = .5 * (ds.coords['level_pressure'][: -1].values \
+                                      + ds.coords['level_pressure'][1:].values)
+        ds.coords.update({'layer_pressure': (['layer_pressure'], layer_pressure_values)})
+        return ds
+    return callf
+
+
+def layer_heating_rate(func):
+    def callf(*args, **kwargs):
+        ds = func(*args, **kwargs)
+        da = ds['heating_rate'].sel(level_pressure=ds.coords['level_pressure'][1:])
+        ds['heating_rate'] = (['spectral_band', 'layer_pressure'], da)
+        return ds
+    return callf
+
+
+def cooling_rate_option(func):
+    def callf(cooling_rate = False, *args, **kwargs):
+        ds = func(*args, **kwargs)
+        if cooling_rate:
+            ds['cooling_rate'] = - ds['heating_rate']
+        return ds
+    return callf
+
+
+def signed_fluxes_option(func):
+    def callf(signed_fluxes = True, *args, **kwargs):
+        ds = func(*args, **kwargs)
+        if signed_fluxes:
+            ds['flux_up'] *= -1
+            ds['net_flux'] = ds['flux_up'] + ds['flux_down']
+        return ds
+    return callf
+
+
+@cooling_rate_option
+@signed_fluxes_option
+@layer_heating_rate
+@layer_pressure
+def load_OUTPUT_CLIRAD(readfrom = 'OUTPUT_CLIRAD.dat'):
+    '''
+    Reads output data from CLIRAD into a Pandas Panel of dimensions
+    (wavenumber bands, pressure, [flux up, flux down, net flux, heating rate])
+    '''
+    with open(readfrom, mode = 'r', encoding = 'utf-8') as f:
+
+        c = f.read()
+
+    content_wbs = (s.strip() for s in c.split('WAVENUMBER BAND:')\
+                   if s and not s.isspace())
+
+    band_numbers = []
+    dfs = []
+    for content_wb in content_wbs:
+        id_wb = int(content_wb.split(maxsplit = 1)[0])
+        df_wb = pd.read_csv(io.StringIO(content_wb), \
+                skiprows = 3, header = None, \
+                sep = r'\s+')
+        df_wb.drop(0, axis = 1, inplace = True)
+        df_wb.set_index(1, inplace = True)
+        df_wb.columns = ['flux_up', 'flux_down', 'net_flux', 'heating_rate']
+        band_numbers.append(id_wb)
+        dfs.append(df_wb)
+
+    df = pd.concat(dfs, keys = band_numbers, names = ['spectral_band', 'level_pressure'])
+
+    ds = xray.Dataset.from_dataframe(df)
+
+    return ds
+
+    
+
         
         
 
