@@ -40,9 +40,10 @@ def lines2bands(pnl, wbands = None):
     return pd.Panel(dict_pnlout)
 
 
-def hr_from_pnl_clirad(pnl_clirad, ib=6):
+def dTdt_from_pnl_clirad(pnl_clirad, ib=6, cooling_rate=False):
     '''
-    Returns heating rate in a CLIRAD-SW spectral band from a CLIRAD-SW calculation.
+    Returns rate of change in temperature in a CLIRAD-SW spectral band
+    from a CLIRAD-SW calculation.
     INPUT:
     pnl_clirad --- Pandas.Panel loaded from OUTPUT_CLIRAD
     ib --- which spectral band
@@ -50,11 +51,16 @@ def hr_from_pnl_clirad(pnl_clirad, ib=6):
     hr --- Pandas.Series containing heating rate for spectral band ib
     '''
     df = sum_OUTPUT_CLIRAD_over_wbands(pnl_clirad, wbands=[ib])
-    hr = df['heating_rate'][1:]
+    if cooling_rate:
+        Trate = 'cooling_rate'
+    else:
+        Trate = 'heating_rate'
+        
+    hr = df[Trate][1:]
 
-    layer_pressure = .5 * (df['pressure'][:-1].values + df['pressure'][1:].values)
+    layer_pressure = .5 * (df['pressure'][:-1].values
+                           + df['pressure'][1:].values)
     hr.index = layer_pressure
-
     return hr
 
 
