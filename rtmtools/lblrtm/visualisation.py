@@ -76,38 +76,39 @@ def matplotlib_colour_linestyle_marker_tuples(N = 10):
     return random.sample(uniques, N)
 
 
-
-
-                                                                
-
-def tabulate_difference(dfs, names = None, title = None,
-                        difference_only = False):
+def tabulate_difference(dfs, names=None, title=None,
+                        return_original=True):
     '''
-    Prints out the difference between all pairs of Data Frames
-    in DFS.  Set DIFFERENCE_ONLY to TRUE to not to print out
-    values of each Data Frame in DFS.
-    INPUT:
-    names --- list of strings, names for each Data Frame in DFS
-    title --- string to be written at the very top
+    For a list of dataframes, calculate the difference
+    between all possible pairs.
+
+    Parameters
+    ----------
+    dfs: list of pandas.DataFrame
+    names: list of names corresponding to `dfs`
+    return_original: True to return dataframes in dfs, else False
+    df_all: pandas.DataFrame containing dataframes of differences
+            and maybe the original dataframes too if `return_original`
+            is True
     '''
     df_pairs = itertools.combinations(zip(names, dfs), 2)
 
-    print()
-    print(title)
-    
-    if not difference_only:
-        for name, df in zip(names, dfs):
-            print()
-            print('{}'.format(name))
-            print(df)
-    
-    for (name1, df1), (name2, df2) in df_pairs:
-        print()
-        print('{} - {}'.format(name1, name2))
-        print(df1 - df2)
+    results = [('{} - {}'.format(name1, name2),
+                df1 - df2)
+               for (name1, df1), (name2, df2) in df_pairs]
 
-    print()
+    names_diff, dfs_diff = zip(*results)
 
+    if return_original:
+        names_all = names + list(names_diff)
+        dfs_all = dfs + list(dfs_diff)
+    else:
+        names_all = names_diff
+        dfs_all = dfs_diff
+        
+    df_all = pd.concat(dfs_all, keys=names_all)
+    return df_all
+        
 
 def plot_pres_vs_flux_down(dfs,
                            names = None, linestyles = None, colours = None,
