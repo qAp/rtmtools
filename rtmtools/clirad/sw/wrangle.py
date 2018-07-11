@@ -6,7 +6,7 @@ import io
 
 import numpy as np
 import pandas as pd
-import xray
+import xarray as xr 
 
 
 
@@ -148,7 +148,7 @@ def load_OUTPUT_CLIRAD(readfrom = 'OUTPUT_CLIRAD.dat'):
 
     df = pd.concat(dfs, keys = band_numbers, names = ['spectral_band', 'level_pressure'])
 
-    ds = xray.Dataset.from_dataframe(df)
+    ds = xr.Dataset.from_dataframe(df)
 
     return ds
 
@@ -160,7 +160,7 @@ def load_OUTPUT_CLIRAD(readfrom = 'OUTPUT_CLIRAD.dat'):
 
 def load_clirad_solirgpts(fpath, signed_fluxes = False, cooling_rate = False):
     '''
-    Loads into an Xray Dataset the fluxes and heating rate output from CLIRAD-SW
+    Loads into an Xarray Dataset the fluxes and heating rate output from CLIRAD-SW
     for all solir spectral bands, all g-points, and all atmosphere layers.
     INPUT:
     fpath --- path of headered csv files where the columns are:
@@ -176,7 +176,7 @@ def load_clirad_solirgpts(fpath, signed_fluxes = False, cooling_rate = False):
     True for downward fluxes to be negative and upward fluxes to be positive
     cooling_rate --- add a DataArray for cooling rate to the output Dataset
     OUTPUT:
-    ds --- Xray Dataset,
+    ds --- Xarray Dataset,
     with dimensions:
     ib --- spectral band
     ik --- g-point
@@ -196,7 +196,7 @@ def load_clirad_solirgpts(fpath, signed_fluxes = False, cooling_rate = False):
     df.drop(axis = 1, labels = ['k'], inplace = True) # drop level indices to avoid creating extra dimension
     df.set_index(['ib', 'ik', 'pressure'], inplace = True)
     
-    ds = xray.Dataset.from_dataframe(df)
+    ds = xr.Dataset.from_dataframe(df)
     
     layer_pressure_values = .5 * (ds.coords['pressure'][: -1].values + ds.coords['pressure'][1:].values)
     ds.coords['layer_pressure'] = layer_pressure_values
